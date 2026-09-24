@@ -42,6 +42,13 @@ n=$(git ls-files --eol | grep -cE 'i/(crlf|mixed)')
 if [ "${n:-0}" -eq 0 ]; then ok "no CRLF or mixed-ending file in the index"; else miss "$n file(s) with CRLF/mixed endings in the index (git ls-files --eol | grep -E 'i/(crlf|mixed)'); merge upstream with -Xrenormalize"; fi
 if [ "$(git config --get merge.renormalize)" = "true" ]; then ok "merge.renormalize is set in this clone"; else warn "merge.renormalize is not set in this clone: run 'git config merge.renormalize true' or pass -Xrenormalize on every upstream merge"; fi
 
+echo "== fork fixes (tracker entries marked fixed must keep their // DBS fix marker)"
+ids=$(awk '/^- \*\*B-[0-9]+\*\*/ { match($0, /B-[0-9]+/); id = substr($0, RSTART, RLENGTH) } /^  - Status: fixed/ && !/no-marker/ { print id }' docs/known-bugs.md 2>/dev/null)
+if [ -z "$ids" ]; then ok "no marker-bearing fixes recorded in docs/known-bugs.md yet"; fi
+for id in $ids; do
+	if grep -rqF -- "DBS fix $id" src/main/java src/main/resources; then ok "marker for $id present"; else miss "tracker says $id is fixed but no '// DBS fix $id' marker exists under src/ (an upstream merge may have undone it)"; fi
+done
+
 echo "== fork-owned files"
 need_file "$J/dbs/DBSFork.java" "DBSFork"
 need_file "$J/dbs/DBSRecipes.java" "DBSRecipes"

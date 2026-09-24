@@ -191,7 +191,7 @@ Reviewed and rejected (kept so they are not rediscovered): 22, listed at the end
 | B-309 | gameplay | oc | `src/main/java/com/hbm/tileentity/bomb/TileEntityLaunchPadBase.java:522-545` | methods()-listed callbacks run as direct PeripheralCallbacks, ignoring @Callback | open |
 | B-311 | gameplay | oc | `src/main/java/com/hbm/tileentity/machine/TileEntityMicrowave.java:241-258` | TileEntityMicrowave ships OC test callbacks test/variableget/variableset | open |
 | B-008 | silent misconfig | core | `src/main/java/com/hbm/handler/HTTPHandler.java:43-58` | HTTPHandler version check compares against JameH2's RefStrings on GitHub | open |
-| B-025 | silent misconfig | api | `.editorconfig:5` | .editorconfig declares CRLF for every file but the tree is mostly LF | open |
+| B-025 | silent misconfig | api | `.editorconfig:5` | .editorconfig declares CRLF for every file but the tree is mostly LF | fixed 27811a59 |
 | B-026 | silent misconfig | api | `.github/workflows/build.yml:15-17,48` | CI workflow only triggers on space-travel-twopointfive and hard-codes 1.0.27 | open |
 | B-042 | silent misconfig | blocks-generic | `src/main/java/com/hbm/blocks/ModBlocks.java:3110` | 32 blocks implement ITooltipProvider/IBlockMulti but use the vanilla ItemBlock | open |
 | B-044 | silent misconfig | blocks-generic | `src/main/java/com/hbm/main/ModEventHandlerClient.java:225` | All ILookOverlay HUDs gated on ClientConfig.DODD_RBMK_DIAGNOSTIC | open |
@@ -499,7 +499,7 @@ Reviewed and rejected (kept so they are not rediscovered): 22, listed at the end
   - .editorconfig declares CRLF for every file but the tree is mostly LF. `end_of_line = crlf` under [*] while api/ is 100% LF, cofh/ 100% CRLF and only ~580 files are CRLF overall; an editor honouring the config rewrites whole files to CRLF and produces noisy diffs and merge conflicts.
   - Evidence: `[*] ... end_of_line = crlf / [{*.info,*.mcmeta,*.cfg}] end_of_line = lf`
   - Fix: Leave the file (upstream-owned) and keep the per-file rule from CLAUDE.md; optionally add `.gitattributes` text=auto entries.
-  - Status: open
+  - Status: fixed 27811a59 + 22c9c89c (no-marker; LF normalisation and .gitattributes policy)
 - **B-026** · silent misconfig · needs a decision · `.github/workflows/build.yml:15-17,48`
   - CI workflow only triggers on space-travel-twopointfive and hard-codes 1.0.27. Push/PR filters name only the main branch so claude/* staging branches never build; the sed rewrites RefStrings.VERSION with a literal `1.0.27` that is independent of gradle.properties mod_version, so a version bump in one place silently diverges.
   - Evidence: `branches: [ "space-travel-twopointfive" ] ... VERSION = \"1.0.27 BETA ($days)\"`
