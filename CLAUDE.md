@@ -127,5 +127,6 @@ Only the ones that bite most tasks; every area in `docs/codebase-map.md` has its
 ## Pointers
 
 - `docs/codebase-map.md`: per-area purpose, key files, patterns, full how-to recipes, gotchas, smells, open questions.
+- `docs/known-bugs.md`: tracker of verified upstream defects (location, evidence, proposed fix, policy, status) plus the claims that were checked and rejected. Read the entries for a subsystem before changing it; update Status when a fix lands.
 - `docs/fork-notes.md`: lineage, what NTM: Space changed, what the owner restored, upstream-merge procedure (routine JameH2-tip merge and direct HbmMods merge) and conflict hotspots, cloud/local split, OC-LuaJIT relation, future work candidates.
 - Upstream docs in-tree: `CONTRIBUTING.md`, `README.md` (JameH2 setup notes), `src/main/resources/assets/hbm/manual/STYLEGUIDE.md`, `src/main/resources/assets/hbm/disks/README.md`, `src/main/java/api/hbm/*/package-info.java`, `src/main/java/com/hbm/handler/neutron/package-info.java`.
