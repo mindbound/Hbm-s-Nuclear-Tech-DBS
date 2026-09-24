@@ -8,11 +8,11 @@ Deep reference: `docs/codebase-map.md`. Fork history and merge procedure: `docs/
 - `github.com/mindbound/Hbm-s-Nuclear-Tech-DBS`: the owner's personal fork ("DBS") of NTM: Space. Owner: Arets Paeglis (GitHub `astronfo` / `mindbound`).
 - Lineage: `HbmMods/Hbm-s-Nuclear-Tech-GIT` master (original NTM, Minecraft 1.7.10) -> `JameH2/Hbm-s-Nuclear-Tech-GIT` branch `space-travel-twopointfive` ("NTM: Space", JamesH_2 and MellowArpeggiation/George Paton) -> this fork.
 - Mod identity: modid `hbm`, name "NTM: Space", `mod_version=1.0.27`, `mod_build_number=5778`, version string `1.0.27_X5778_H261`, `RefStrings.VERSION` = "1.0.27 BETA (5778)".
-- Main development branch: `space-travel-twopointfive`. HEAD is a clean merge of JameH2's tip plus two fork-only commits that restore deprecated content (research/breeding reactors, BAT9000 recipe); 7 files differ from upstream. Hashes, restore details and the merge procedure are owned by `docs/fork-notes.md`.
+- Main development branch: `space-travel-twopointfive`. HEAD is a clean merge of JameH2's tip plus the fork's own commits, which restore deprecated content (research/breeding reactors, BAT9000 recipe) through the fork-owned package `src/main/java/com/hbm/dbs/`. Hashes, restore details and the merge procedure are owned by `docs/fork-notes.md`.
 - Git remotes in the cloud clone: `origin` (fork), `upstream` (JameH2), `hbm` (HbmMods). The cloud clone is shallow (24 boundary commits), so `git log -S` and `--diff-filter` can miss old history there; the owner's local clone has full history.
 - Owner's local checkout (Windows, JDK 8 and JDK 21 installed): `C:\Users\astro\Downloads\Hbm-s-Nuclear-Tech-DBS`. It is the only place the mod gets compiled and tested. Cloud sessions work on `claude/...` staging branches.
 - Sibling repo: `/home/user/OC-LuaJIT` (`github.com/mindbound/OC-LuaJIT`), a LuaJIT CPU architecture addon for GTNH OpenComputers. It touches this mod only at OC's component-call boundary.
-- Size: 3886 `.java` files (~530k LOC); 6790 png, 591 ogg, 580 obj, 201 json, 130 nbt, 10 lang files.
+- Size: 3889 `.java` files (~530k LOC); 6790 png, 591 ogg, 580 obj, 201 json, 130 nbt, 10 lang files.
 
 ## Build and test
 
@@ -48,12 +48,12 @@ One line per top-level package; `docs/codebase-map.md` has the depth.
 - `com/hbm/render/`: TESRs, item/entity renderers, ISBRHs, OBJ loader, bus animations, shaders. Also `com/hbm/animloader/` (Collada, seal door only), `com/hbm/particle/`, `com/hbm/sound/`.
 - `com/hbm/util/`: helpers (BufferUtil, I18nUtil, BobMathUtil, InventoryUtil, ItemStackUtil, Compat*, fauxpointtwelve BlockPos/DirPos; role table in `docs/codebase-map.md` area 16).
 - `com/hbm/saveddata/`: WorldSavedData (satellites, Tom impact, annihilator). Smaller packages: `qmaw/` (in-game manual), `wiaj/` (client tutorial viewer), `module/`, `extprop/`, `potion/`, `commands/`, `creativetabs/`, `interfaces/`.
-- `src/main/resources/assets/hbm/`: lang, manual (QMAW json), structures (nbt), models, textures, sounds + sounds.json, shaders, disks (OC floppy). `tools/`: Blender animation exporters.
+- `src/main/resources/assets/hbm/`: lang, manual (QMAW json), structures (nbt), models, textures, sounds + sounds.json, shaders, disks (OC floppy). `tools/`: Blender animation exporters and `check-fork.sh` (post-merge fork check).
 
 ## Core conventions
 
 - Indentation: tabs by default (`.editorconfig`), but match the file you are in: 17 files are 4-space only (mostly `dim/*/genlayer/*`, `handler/ae2/MSUExternalStorageHandler`, `world/ModBiomes`, `inventory/gui/GuiInfoContainerLayered`) and `handler/CompatHandler.java`, `handler/atmosphere/ChunkAtmosphereManager.java`, `handler/ae2/AE2CompatHandler.java` are mostly spaces with a few tab lines.
-- Line endings: the file declares CRLF but the tree is mixed (`api/` all LF, `cofh/` all CRLF, ~580 files CRLF total, root Markdown LF). Run `git ls-files --eol -- <path>` before editing and keep whatever the file has (`w/crlf` means write CRLF back); never mass-normalize. Only `*.info`, `*.mcmeta`, `*.cfg` are declared LF.
+- Line endings: the file declares CRLF but the tree is mixed (`api/` all LF, `cofh/` all CRLF, ~580 files CRLF total, root Markdown LF). Run `git ls-files --eol -- <path>` before editing and keep whatever the file has (`w/crlf` means write CRLF back); never mass-normalize. Only `*.info`, `*.mcmeta`, `*.cfg` are declared LF; the fork-added `.gitattributes` additionally pins `tools/*.sh` to LF.
 - Style: `if(cond)` and `for(` without a space, braces on the same line, obfuscated MCP names (`func_147480_a`) left as-is, informal comments.
 - Logging: `MainRegistry.logger` (Log4j `HBM`; `preInit` swaps in FML's mod log) is the only logger, with the subsystem in brackets (`[QMAW]`, `[Jigsaw]`, `[Debug]`). Do not create loggers or add `System.out.println` (62 legacy calls remain).
 - Translation: use `com.hbm.util.i18n.I18nUtil` (`resolveKey`, `resolveKeyArray`, `format`), never `net.minecraft.client.resources.I18n` (CONTRIBUTING rule; 343 legacy direct calls remain). On the dedicated server `I18nUtil` returns "I18N CALL SERVERSIDE - GREAT JOB"; server text uses `ChatBuilder`/`ChatComponentTranslation`.
@@ -65,6 +65,7 @@ One line per top-level package; `docs/codebase-map.md` has the depth.
 - Lang keys: `item.<unloc>.name`, `tile.<name>.name`, `.desc` with `$` as the line break (all other key families in `docs/codebase-map.md` area 17). Edit `en_US.lang` (LF); mirror to `zh_CN`/`ru_RU` when practical. A literal `%` must be `%%`.
 - Do not edit `changelog` in ordinary work (the CurseForge task rotates it and it conflicts on every upstream merge). A deliberate fork note goes under `## Added`/`## Changed`/`## Fixed` in its own commit.
 - Upstream-merge friendliness: keep fork changes additive; do not reorder `ModItems`/`ModBlocks`/`TileMappings`/`ClientProxy` lists; leave `gradle.properties`, `RefStrings`, `README.md`, `.editorconfig` alone unless releasing.
+- Fork-owned code lives in `src/main/java/com/hbm/dbs/`: `DBSFork.init()` is the single entry point, called from the one `// DBS fork hook` line in `MainRegistry.PreLoad` directly after `ModItems.mainRegistry()` (it must run after `ModItems.mainRegistry()` and before `PostLoad`; keep it on the very next line so a merge conflict stays local and the script can verify the order); `DBSRecipes` is an `IRecipeRegisterListener` whose `onRecipeLoad` adds the restored recipes when `SerializableRecipe.initialize()` reports `AssemblyMachineRecipes` or `AnvilRecipes` (same JSON-override semantics as an inline default, no hook in any recipe class); `DBSItems` re-applies creative tabs. The only other fork lines in upstream files are the marked `BreederRecipeHandler` registration in `NEIRegistry` and the " (LEGACY)"-stripping lang edits in `en_US.lang`/`de_DE.lang`. Never put fork logic inline in an upstream file; never edit `ModItems`/`ModBlocks` for fork purposes when a post-init hook can do it (upstream's `@Deprecated` markers are inert; leave them). After every upstream merge run `bash tools/check-fork.sh` from the repo root (Git Bash on Windows) and fix every `MISS` before building; the script must stay LF (`.gitattributes` pins it).
 - Marker annotations from `com.hbm.interfaces`: `@Spaghetti("why")` for known-bad code, `@Untested`, `@NotableComments`; keep them when editing. `@Deprecated` is used liberally on still-live legacy paths; check callers before deleting anything.
 - Working agreement (details in `docs/fork-notes.md`): either the owner or a session makes code changes; a session always provides a commit message draft for its own changes; the owner reviews everything and pushes `space-travel-twopointfive` themselves. Running locally: edit the working tree, do not commit, put the draft message in the hand-off. Running in the cloud: commit and push only to the session's `claude/...` staging branch (the container is ephemeral), never to `space-travel-twopointfive`; the staging commit message is the draft. Attribution trailers for session commits come from the session's system reminder.
 
@@ -94,7 +95,7 @@ Add a machine end-to-end:
 4. `ModBlocks` field, init and `register(machine_x)`.
 5. `inventory/container/ContainerMachineX` (prefer `ContainerBase`) and `inventory/gui/GUIMachineX extends GuiInfoContainer`; the TE's `provideContainer`/`provideGUI`.
 6. `render/tileentity/RenderX extends TileEntitySpecialRenderer implements IItemRendererProvider`, bound in `ClientProxy.registerTileEntitySpecialRenderer` (the item renderer auto-registers); model and texture statics in `main/ResourceManager` (triangulated OBJ with normals for `.asVBO()`).
-7. Lang `tile.machine_x.name`, `tile.machine_x.desc`, `container.x`; recipe in `main/CraftingManager` or `inventory/recipes/AssemblyMachineRecipes`.
+7. Lang `tile.machine_x.name`, `tile.machine_x.desc`, `container.x`; recipes from fork code, not inline upstream: assembler recipe as a branch in `com/hbm/dbs/DBSRecipes.registerAssembly` ("Add a recipe" step 5), crafting-table recipe via `CraftingManager.addRecipeAuto(...)` called from a fork method.
 Exemplars: `blocks/machine/MachineChemicalPlant.java`, `tileentity/machine/TileEntityMachineChemicalPlant.java`, `render/tileentity/RenderPump.java`, `tileentity/machine/TileEntityMachineElectricFurnace.java` (single block).
 
 Add a recipe:
@@ -102,6 +103,7 @@ Add a recipe:
 2. Classic SerializableRecipe sets: use the class's add helper in `registerDefaults()` and make sure `readRecipe`/`writeRecipe` cover any new field.
 3. Crafting table: `CraftingManager.addRecipeAuto(...)` in `com/hbm/crafting/*` (ore-dict Strings switch to ShapedOreRecipe).
 4. Defaults apply only when `config/hbmRecipes/hbm<Machine>.json` is absent; delete the JSON on test installs.
+5. Fork-only recipes go in `src/main/java/com/hbm/dbs/DBSRecipes.java` (add a branch for the set's class name in `onRecipeLoad`), never inline in the upstream set.
 Exemplar: `src/main/java/com/hbm/inventory/recipes/ChemicalPlantRecipes.java`; classic: `PressRecipes.java`.
 
 Rarer tasks, full recipes in the map: a fluid (`Fluids.init()` above `//ADD NEW FLUIDS HERE` + `metaOrder.add`; area 10), a packet (`IMessage` + nested `Handler`, APPEND to `PacketDispatcher.registerPackets()`; area 16), an OC component (`@Optional.InterfaceList` + direct `SimpleComponent` + `CompatHandler.OCComponent`, `@Callback(direct = true)`, `methods()`/`invoke()` for multiblocks; area 18), armor sets and armor mods (area 8), worldgen (area 14), entities (area 12).

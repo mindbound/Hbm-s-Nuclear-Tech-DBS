@@ -282,6 +282,7 @@ public class MainRegistry {
 		proxy.registerPreRenderInfo();
 		ModBlocks.mainRegistry();
 		ModItems.mainRegistry();
+		com.hbm.dbs.DBSFork.init(); // DBS fork hook
 		ModBiomes.init();
 		proxy.registerRenderInfo();
 		HbmWorld.mainRegistry();
