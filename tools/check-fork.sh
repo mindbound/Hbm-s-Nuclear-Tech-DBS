@@ -7,7 +7,7 @@
 #
 # The fork keeps its own code in src/main/java/com/hbm/dbs/ and touches upstream files only with
 # two single lines marked "// DBS fork hook" (MainRegistry, NEIRegistry); recipes arrive through
-# upstream's IRecipeRegisterListener addon hook. This script checks those files, the hooks, the restored
+# upstream's IRecipeRegisterListener addon hook. The tree is all-LF (.gitattributes enforces it). This script checks those files, the hooks, the restored
 # recipes, and every upstream class or registration the restores depend on, so that a merge which
 # silently removes something (as HbmMods did with MachineTurbine) is caught before the build.
 
@@ -19,6 +19,7 @@ fail=0
 
 ok()   { printf 'ok    %s\n' "$1"; }
 miss() { printf 'MISS  %s\n' "$1"; fail=1; }
+warn() { printf 'note  %s\n' "$1"; }
 
 need_file()  { if [ -f "$1" ]; then ok "$2"; else miss "$2 ($1 not found)"; fi; }
 need_class() { if grep -rl --include="$1.java" -e "" src/main/java | grep -q .; then ok "class $1"; else miss "class $1 (no $1.java under src/main/java)"; fi; }
@@ -34,6 +35,12 @@ if grep -rlE '^(<{7}|>{7})( |\r?$)' src/main/java src/main/resources/assets/hbm/
 else
 	ok "no merge conflict markers"
 fi
+
+echo "== line endings (all-LF policy since 27811a59)"
+need_egrep '^\*\.java[[:space:]]+text[[:space:]]+eol=lf' .gitattributes "gitattributes declares *.java text eol=lf"
+n=$(git ls-files --eol | grep -cE 'i/(crlf|mixed)')
+if [ "${n:-0}" -eq 0 ]; then ok "no CRLF or mixed-ending file in the index"; else miss "$n file(s) with CRLF/mixed endings in the index (git ls-files --eol | grep -E 'i/(crlf|mixed)'); merge upstream with -Xrenormalize"; fi
+if [ "$(git config --get merge.renormalize)" = "true" ]; then ok "merge.renormalize is set in this clone"; else warn "merge.renormalize is not set in this clone: run 'git config merge.renormalize true' or pass -Xrenormalize on every upstream merge"; fi
 
 echo "== fork-owned files"
 need_file "$J/dbs/DBSFork.java" "DBSFork"

@@ -153,7 +153,7 @@ Areas:
 | `api/hbm/block/ICrucibleAcceptor.java`, `IFuckingExplode.java`, `ILaserable.java`, `IBlowable.java`, `IInsertable.java`, `IPileNeutronReceiver.java` (@Deprecated) | Block hooks. Dead: `IRadioControllable`, `IDrillInteraction`, `IMiningDrill` (only the last two are @Deprecated). |
 | `api/hbm/conveyor/*`, `api/hbm/item/*`, `api/hbm/entity/*`, `api/hbm/ntl/*`, `api/hbm/recipe/*`, `api/hbm/redstoneoverradio/*` | Conveyor belt/item/package/enterable; gas mask/designator/depth tool (`IGunHUDProvider` dead); `IRadarDetectableNT` (+ deprecated `IRadarDetectable`, `RadarEntry`); pneumatic storage (`ISlotMonitorProvider`, `SlotMonitor`, `StackCache`); addon recipe hook + guide; ROR (`IRORInfo` `VAL:`/`FUN:` prefixes, final interface constants; `IRORValueProvider` 42 impl, `IRORInteractive` 27 impl). |
 | `src/main/java/cofh/api/energy/*`, `cofh/api/CoFHAPIProps.java`, `cofh/api/package-info.java` | 12 files: `energy/` holds `IEnergyHandler`, `IEnergyProvider`, `IEnergyReceiver`, `IEnergyConnection`, `IEnergyContainerItem`, `IEnergyStorage`, `EnergyStorage`, `TileEnergyHandler`, `ItemEnergyContainer` and a `package-info` declaring `@API(apiVersion = CoFHAPIProps.VERSION, owner = "CoFHAPI", provides = "CoFHAPI|energy")`; the top-level `cofh/api/package-info.java` declares `owner = "CoFHLib", provides = "CoFHAPI"`; `CoFHAPIProps.VERSION = "1.7.10R1.0.2"`. |
-| `.github/workflows/build.yml`, `.editorconfig`, `.gitignore`, `.gitattributes` (fork-added: `tools/*.sh text eol=lf`) | CI on `space-travel-twopointfive` only; tabs + CRLF (mixed reality); ignores `/eclipse` (ForgeGradle runDir), `/build`, `/run`, `curseforge.properties`, `maven.properties`, `changelog.bak`. |
+| `.github/workflows/build.yml`, `.editorconfig`, `.gitignore`, `.gitattributes` (fork-added: `text eol=lf` for every text type, `*.bat` CRLF on checkout, binaries `-text`) | CI on `space-travel-twopointfive` only; tabs; `.editorconfig` says LF (fork line, upstream says CRLF); ignores `/eclipse` (ForgeGradle runDir), `/build`, `/run`, `curseforge.properties`, `maven.properties`, `changelog.bak`. |
 
 ### Patterns
 
@@ -191,7 +191,7 @@ Areas:
 - `FluidNetMK2` arrays are sized `HIGHEST_VALID_PRESSURE + 1 = 6` x priorities; pressure > 5 indexes out of bounds.
 - `particleDebug` constants in `IEnergyHandlerMK2`/`IFluidUserMK2` spam `AuxParticlePacketNT` if flipped.
 - `ToolType.getType` builds its map once; later `register` calls are ignored.
-- Line endings: `api/` is entirely LF, `cofh/` entirely CRLF.
+- Line endings: all LF since the fork's normalisation commit `27811a59`; `.gitattributes` enforces it; merge upstream with `-Xrenormalize`.
 - CI runs only on `space-travel-twopointfive`; the `1.0.27` literal in `build.yml`'s sed is separate from `gradle.properties`.
 
 ### Smells
@@ -1033,7 +1033,7 @@ Item-carried hazards (`hazard/`), per-chunk world radiation (`handler/radiation/
 
 ### Purpose
 
-Everything outside Java that a change must touch: the Gradle build (`build.gradle`, `gradle.properties`, wrapper 4.4.1, ForgeGradle 1.2 anatawa12, JDK 8), the access transformer, and `src/main/resources/assets/hbm/`: 10 `.lang` files (`en_US` 7377 lines / 7199 unique keys / 23 duplicates), 194 QMAW manual pages, 130 NBT structures, 588 model files, ~6.9k textures, 594 sounds + `sounds.json`, GLSL shaders, one OC floppy. `tools/` holds Blender add-ons for the animation JSON and the fork's `check-fork.sh` post-merge check (LF-pinned by the fork-added `.gitattributes`).
+Everything outside Java that a change must touch: the Gradle build (`build.gradle`, `gradle.properties`, wrapper 4.4.1, ForgeGradle 1.2 anatawa12, JDK 8), the access transformer, and `src/main/resources/assets/hbm/`: 10 `.lang` files (`en_US` 7377 lines / 7199 unique keys / 23 duplicates), 194 QMAW manual pages, 130 NBT structures, 588 model files, ~6.9k textures, 594 sounds + `sounds.json`, GLSL shaders, one OC floppy. `tools/` holds Blender add-ons for the animation JSON and the fork's `check-fork.sh` post-merge check (LF like the whole tree; `.gitattributes` enforces it).
 
 ### Key files
 
@@ -1051,7 +1051,7 @@ Everything outside Java that a change must touch: the Gradle build (`build.gradl
 | `assets/hbm/models/` (580 obj: root 72 legacy, `machines/` 142, `weapons/` 67 + `animations/` 6 json + `tom_flame.hmf` + `doors/seal.dae`; `weapons/.obj` has an empty basename and corrupted vertex lines; 36 obj unreferenced by literal path), `models/weapons/animations/am180.json` (keys `anim/offset/hierarchy`, no `rotmode`) | Models. |
 | `assets/hbm/shaders/` (11 frag, 2 vert, `iChannel1.png`) | Shaders (area 15). |
 | `tools/export-json-animation-4_0.py`, `3_2.py`, `2_79.py` | Blender add-ons (`export.ntm_json`/`import.ntm_json`; actions `Name.Part`, YZX Euler, frame 0 rest; axes swizzled `[x, z, y]` with `[1, -1, 1]`; 2.79 variant uses deprecated assignment-style properties, untested on modern Blender). |
-| `tools/check-fork.sh`, `.gitattributes` | Fork-added. Post-merge check for the `com/hbm/dbs` wiring, the restored recipes and every upstream class/registration they depend on: `bash tools/check-fork.sh` from the repo root, exit 1 on any `MISS`; `.gitattributes` pins `tools/*.sh` to LF so Git Bash can run it whatever `core.autocrlf` says. |
+| `tools/check-fork.sh`, `.gitattributes` | Fork-added. Post-merge check for the `com/hbm/dbs` wiring, the restored recipes and every upstream class/registration they depend on: `bash tools/check-fork.sh` from the repo root, exit 1 on any `MISS`; `.gitattributes` keeps every text file LF (tree normalised in `27811a59`) so Git Bash can run it whatever `core.autocrlf` says. |
 | `lib/RefStrings.java`, `util/i18n/*`, `inventory/fluid/FluidType.java` (`hbmfluid.<lower>`), `inventory/material/NTMMaterial.java` (`hbmmat.<lower>`), `inventory/recipes/GasCentrifugeRecipes.java` (`hbmpseudofluid.`), `items/machine/ItemStampBook.java` (`getUnlocalizedName(ItemStack)` per-variant exemplar), `blocks/IBlockMulti.java` + `BlockEnumMulti.java` + `items/block/ItemBlockBase.java` (per-meta block names; `BlockAbsorber` is a double-translate hack, do not copy), `potion/HbmPotion.java:114` (only literal `"hbm"` ResourceLocation) | Key generation. |
 
 ### Patterns
@@ -1063,7 +1063,7 @@ Everything outside Java that a change must touch: the Gradle build (`build.gradl
 - Model registration: `HFRWavefrontObject(...).asVBO()` for new models; `AdvancedModelLoader.loadModel` is legacy (and the only way to load `.hmf`); Collada and JSON animations via `ColladaLoader.load`/`AnimationLoader.load`.
 - Sound registration is data-only (`<group>.<camelName>` -> `sounds/<group>/<file>.ogg`; categories player/block/record/hostile/ambient/neutral/music; `stream` for long loops).
 - Structures: `public static final NBTStructure x = new NBTStructure(new ResourceLocation(RefStrings.MODID, "structures/<sub>/<file>.nbt"))`.
-- Line endings: root Markdown LF; lang files mixed (en_US/pl_PL/ru_RU/zh_CN/en_AU LF; de_DE/fr_FR/it_IT/uk_UA/test CRLF).
+- Line endings: all files LF since `27811a59` (`.gitattributes` enforces it; upstream lang files arrive CRLF and are normalised on commit).
 
 ### How-to
 
