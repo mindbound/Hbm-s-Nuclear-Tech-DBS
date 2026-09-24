@@ -1,0 +1,130 @@
+# Fork notes
+
+Provenance, working agreements and merge procedure for `mindbound/Hbm-s-Nuclear-Tech-DBS`. Facts below were verified against the cloud clone on 2026-09-24 (HEAD `ee9fd54a`). Commit hashes refer to the remotes `origin` (fork), `upstream` (JameH2), `hbm` (HbmMods). The clone is shallow (24 boundary commits in `.git/shallow`; HbmMods history reachable only back to 2026-06-23), so absence of a `git log -S` hit is not proof.
+
+These notes (`CLAUDE.md`, `docs/codebase-map.md`, this file) were produced on 2026-09-24 by a multi-agent survey (19 subsystem readers, each adversarially verified against source, then accuracy and completeness critics) and hand-checked afterwards. Line numbers are from that snapshot; class and method names are the stable anchors.
+
+## Lineage
+
+1. `HbmMods/Hbm-s-Nuclear-Tech-GIT` master: the original Nuclear Tech Mod for Minecraft 1.7.10 (Bobcat / HbMinecraft). Latest seen: `5566a5d1`, build 5808, 2026-09-23.
+2. `JameH2/Hbm-s-Nuclear-Tech-GIT` branch `space-travel-twopointfive`: "NTM: Space" by JamesH_2 and MellowArpeggiation (George Paton). Tip merged here: `64b64130` (2026-09-21). Last HbmMods commit JameH2 merged: `9a2eb731` (build X5771, 2026-07-30), via staging branch `upstream_X5771` (merge commit `bb2976a1`, 2026-08-04, whose message names `space-travel-misery` as the target branch).
+3. `mindbound/Hbm-s-Nuclear-Tech-DBS` (this repo): Arets Paeglis' personal fork. Main branch `space-travel-twopointfive`; HEAD `ee9fd54a` (2026-09-24) is a clean merge of JameH2's tip. Fork-only commits: `50db588d` "Restored research and breeding reactors (sorry, Bobcat, I like them too much)" and `7bb06fe2` "Tank restoration project". 7 files differ from upstream (+174/-25).
+
+Identity stays `modid hbm`, name "NTM: Space", `mod_version=1.0.27`, `mod_build_number=5778` (a JameH2-only bump in `e51483ca` "gerber"; the last merged HbmMods build was 5771), version string `1.0.27_X5778_H261`.
+
+## What NTM: Space changed versus HbmMods
+
+Measured three-way against the merge base `9a2eb731`: Space adds 1527 files, deletes 14, modifies 546, renames 5 (+298653/-28331 lines). The substance:
+
+- `com/hbm/dim/` (159 files, all Space): `SolarSystem`/`CelestialBody`, `WorldProviderCelestial`/`ChunkProviderCelestial`/`SkyProviderCelestial`, traits (`CBT_*`), per-body packages (moon, duna, eve, laythe, minmus, moho, dres, tekto, thatmo, Ike, orbit), `noise/`, `mapgen/`; `WorldProviderEarth` replaces the overworld provider; `PlanetGen`; `SpaceConfig`.
+- `handler/atmosphere/` (6 files): sealed-room atmosphere blobs, breathability, depressurisation (`EntityDepress`).
+- Orbital stations (`dim/orbit/OrbitalStation`, `TileEntityOrbitalStation*`, `IPropulsion`, `TileEntityXenonThruster`), custom rockets (`RocketStruct`, `ItemCustomRocket`, `EntityRideableRocket`, `TileEntityLaunchPadRocket`, `MachineRocketAssembly`), `ItemVOTVdrive`, `CelestialTeleporter`.
+- Satellites reworked (`SatelliteDysonRelay`, `SatelliteRailgun`, `SatelliteWar`, per-dimension client caches, `sat_*.png` textures).
+- 60 net new fluid IDs (`metaOrder` grows 160 -> 220; the diff adds or edits 78 `new FluidType` lines) and traits `FT_Rocket`, `FT_Terraformer` (`FT_Pheromone` already exists at the base); `AtmosphereRecipes`, `CryoRecipes`.
+- `PermaSyncHandler` sections for traits, stations, satellites, per-dimension time; `EntityMappings` fauna (moon cow, fish family, plastic bag, pigeon); `CBT_Invasion` siege waves; `EntityNukeTorex` vacuum look.
+- Meta: `_H261` suffix in `build.gradle`, HbmMods' `.github/workflows/build.yml` retargeted to `space-travel-twopointfive` (a 7-line edit, not a new file), rewritten `README.md`, `changelog` reset to Space-only notes, `en_AU.lang` added. `.editorconfig` is byte-identical to the merge base; HbmMods extended it by 17 lines on 2026-08-18 (`7ecf7dd3` "formatting treaty of peace", `1e0161f7` ".editor config additions"), so expect that change to arrive with the next merge.
+- Real deletions/renames vs base are only: `BlockPinkLog`, `render/shader/ShaderManager` + `Uniform`, `WorldProviderNTM` -> `WorldProviderTom`, `ItemModCloud` -> `ItemModV1`, `manual/satellite/lunarminer.json`, `bottled_cloud.png`, `ingot_uzh.png`, `satellite.*.png`. Everything else that shows as "deleted" in `git diff hbm/master upstream/space-travel-twopointfive` is an HbmMods addition made after 2026-07-30.
+
+## What the owner restored so far
+
+`50db588d` (research and breeding reactors) is the exact inverse of HbmMods `804d2bd1` "out with the old" (2026-07-29), found with `git log -S'<id>' hbm/master -- <file>`:
+
+- `inventory/recipes/AssemblyMachineRecipes.java`: re-added `ass.breedingreactor` (L541) and `ass.researchreactor` (L544).
+- `inventory/recipes/anvil/AnvilRecipes.java`: re-added 7 tier-4 ingot/billet -> `plate_fuel_*` construction recipes (L600-606).
+- `handler/nei/BreederRecipeHandler.java`: re-added byte-identical; `main/NEIRegistry.java:36` `handlers.add(new BreederRecipeHandler())`.
+- `items/ModItems.java`: removed `@Deprecated` from 7 `plate_fuel_*` and 7 `waste_plate_*` fields; `plate_fuel_*` creative tab restored to `controlTab` (registration lines were never removed upstream).
+- `lang/en_US.lang`: dropped " (LEGACY)" from `tile.machine_reactor.name` / `tile.machine_reactor_small.name` (L6485-6486). `lang/de_DE.lang`: German names restored, plus a stray dead key `tile.machine_reactor_on.name` (L4538; no such block).
+
+`7bb06fe2` (tank restoration) re-adds `ass.bat9k` (AssemblyMachineRecipes L491), identical to the line HbmMods `b8c71e2a` (2026-05-12) replaced with `ass.bigasstank` for the non-deprecated successor block `ModBlocks.machine_bigasstank`. The fork now ships both recipes.
+
+Registration, `TileMappings` entries, TESR bindings, GUI providers, textures, hazards, `FuelPoolRecipes` and the `BreederRecipes` JSON handler were verified present for all restored machines.
+
+Incomplete or worth knowing:
+
+- Restored recipes are defaults only: `SerializableRecipe.initialize()` reads `config/hbmRecipes/hbmAssemblyMachine.json` / `hbmAnvil.json` instead of `registerDefaults()` when the file exists (and a server's synced recipe stream takes priority over both), so existing installs will not see them until the JSON is deleted or regenerated.
+- BAT9000: `ModBlocks.machine_bat9000`, `MachineBigAssTank9000` and `TileEntityMachineBAT9000` are still `@Deprecated`; `en_US.lang:6361` still says "(LEGACY)"; `zh_CN` carries the equivalent marker and `en_AU` its own name. The commit title suggests a wider project; only the recipe was restored.
+- Neither commit added a `changelog` line.
+- `TileEntityReactorResearch.java:51` still carries `//TODO: fix reactor control;` (rod control is delegated to `TileEntityReactorControl` via the `reactor_sensor` item); `isItemValidForSlot` uses `i < 12 && i <= 0`.
+- `fr_FR.lang:234` names the research reactor "Reacteur de fusion" (pre-existing).
+
+## Upstream state and the pending delta
+
+`hbm/master` is 194 first-parent commits / 744 files ahead of the merge base (A191 D24 M526 R3, +56367/-11432). What matters for the next merge:
+
+- Old fluid API removed: `api/hbm/fluid/*` deleted across `1abaa1e5` (2026-09-17, `IFluidStandardTransceiver`), `c1cc97b2` and `9593d7f8` (2026-09-18, Receiver/Sender), `2393b6de` (2026-09-21, `IFluidConnector`, `IFluidConnectorBlock`). Base tiles were ported to `api/hbm/fluidmk2` upstream (64 files, 22 of them also edited by Space, so they 3-way merge). HEAD still has 78 old-API users; 12 are Space-added and nobody upstream will port them: `tileentity/machine/{TileEntityAirPump, TileEntityAirScrubber, TileEntityAlgaeFilm, TileEntityMachineCryoDistill, TileEntityMachineGasDock, TileEntityMachineHTRF4, TileEntityMachineMagma, TileEntityMachineMilkReformer, TileEntityOrbitalStation, TileEntityTransporterBase, TileEntityXenonThruster}` and `tileentity/machine/oil/TileEntityMachineAlkylation`. `api/hbm/fluidmk2` (14 files) already exists at HEAD, so these can be ported now.
+- `IControlReceiver`: upstream deletes the abstract `receiveControl(NBTTagCompound)` and makes `receiveControl(EntityPlayer, NBTTagCompound)` abstract. HEAD already has the default player-aware overload, so the 9 Space-added implementers (of 84 files defining the old signature) can be migrated ahead of the merge.
+- Deletions/renames with HEAD references: `MachineTurbine`/`TileEntityMachineTurbine`/`ContainerMachineTurbine`/`GUIMachineTurbine` + anvil recipe (HEAD refs: `machine_turbine` in BunkerComponents, ItemStarterKit, AnvilRecipes, ModBlocks, EntityFBI; `TileEntityMachineTurbine` in TileMappings:386), `HbmCollection` (no references outside `lib/HbmCollection.java`: delete), `FusionRecipesLegacy` (Space modified it, upstream deleted it; nothing references it, so delete), `EntityMinerRocket` (4 files: `TileEntityMachineSatDock`, `render/entity/rocket/RenderMinerRocket`, `ClientProxy`, `EntityMappings`), `BlastFurnaceRecipe` -> `GenericRecipeNoPower` (1 file: `BlastFurnaceRecipesNT`, 19 lines), `EntitySoyuz` -> `EntityRocketSoyuz` (3 files: `TileEntitySoyuzLauncher`, `ClientProxy`, `EntityMappings`). Counts are files at HEAD excluding the class's own file.
+- Re-deprecation of what the fork restored: `54642452` (2026-08-17) adds `@Deprecated` to `ModBlocks.reactor_research` and class `TileEntityReactorResearch` (and removes the TODO); `1abaa1e5` adds `@Deprecated` to `ModBlocks.machine_reactor_breeding`; `13b8efef` (2026-08-02) sets `setCreativeTab(null)` on the 7 `waste_plate_*` items. All of these lines were untouched by the fork, so they merge cleanly and silently. The reactor classes, `TileMappings` entries and TESRs still exist on `hbm/master` (no "step 2" deletion yet); `MachineTurbine` shows what step 2 looks like.
+- Satellite/rocket overlap: upstream added `SatelliteScience`, `EntitySatellitePod`, `EntityRocketBase`/`Lambda`, new Soyuz/Lambda pads, `TilePort`, "soyuz recipes now use flight simulation data from the supercomputer", while Space rewrote satellites and rockets (`saveddata/satellites/*`, `entity/missile/EntityRideableRocket`, `handler/RocketStruct`, the launch pads). Expect semantic conflicts, plus modify/delete on `manual/satellite/lunarminer.json` and `textures/items/satellite.relay.png`. Upstream `TODO.txt` (not in the fork) lists more in-flight work in the same areas (Soyuz launcher NBT, rocket assembler, AutoPort/PortDef, copy-tool rewrite, salvaged satellites).
+- `pt_BR.lang` exists only upstream and will arrive without Space keys.
+
+## Upstream-merge procedure
+
+### Routine: merge JameH2's tip
+
+The normal path: JameH2 absorbs HbmMods and the fork only follows JameH2.
+
+1. `git fetch upstream`; `git log --oneline HEAD..upstream/space-travel-twopointfive` shows what arrives.
+2. `git merge --no-ff -Xignore-cr-at-eol upstream/space-travel-twopointfive`. Only the 7 fork-only files can conflict: `handler/nei/BreederRecipeHandler.java` (fork-added), `inventory/recipes/AssemblyMachineRecipes.java`, `inventory/recipes/anvil/AnvilRecipes.java`, `items/ModItems.java`, `main/NEIRegistry.java`, `lang/en_US.lang`, `lang/de_DE.lang` (plus `changelog` if a Space note was added). Keep the fork hunks (they are appended lines or removed `@Deprecated`/tab changes) unless upstream deleted the restored classes.
+3. Re-verify the restores afterwards: `reactor_research`/`machine_reactor_breeding`/`machine_bat9000` still in `ModBlocks`, `TileMappings`, `ClientProxy`, `NEIRegistry`; `ass.breedingreactor`/`ass.researchreactor`/`ass.bat9k` present; " (LEGACY)" not reintroduced in `en_US`/`de_DE`; expect the `@Deprecated` markers from `54642452`/`1abaa1e5`/`13b8efef` to arrive the first time JameH2 merges a build >= 5808 (deprecation policy below).
+4. Hand off for a local `./gradlew build` and in-game test; bump nothing (`gradle.properties`/`RefStrings` come from JameH2).
+
+### Direct HbmMods merge (JameH2 style; only if JameH2 stalls)
+
+JameH2 merges with real merge commits from a staging branch named after the HbmMods build (`upstream_X5771` -> `bb2976a1`, `merge_x5768` -> `8eb10daa`, `X5670` -> `4b62cab8`, `X5634` -> `d8b73709`, `x5617` -> `0f660349`; earlier ones are plain "Merge branch 'master'"), roughly 2-3 times a month, never rebase or squash. Verified as pure snapshots for the two mid-2026 merges; assumed for the older ones.
+
+1. `git fetch hbm`; confirm the base: `git merge-base hbm/master HEAD` (currently `9a2eb731`).
+2. `git branch upstream_X<build> hbm/master` (build = HbmMods `mod_build_number` at that commit).
+3. Line endings: 18 files present on both sides flip CRLF-ness. LF here / CRLF upstream: `en_US.lang`, `ru_RU.lang`, `ModEventHandlerClient.java`, the `MachineTurbineGas` family (`MachineTurbineGas`, `TileEntityMachineTurbineGas`, `ContainerMachineTurbineGas`, `GUIMachineTurbineGas`, `RenderTurbineGas`), `TileEntityFireboxBase`, `AshpitHandler`, `manual/material/gunmetal.json`, `textures/blocks/molten_overlay.png.mcmeta`. CRLF here / LF upstream: `ClientProxy.java` and five `blocks/*` files (`BlockContainerBase`, `MaterialGas`, `IBlockMulti`, `IRadResistantBlock`, `IStepTickReceiver`). A plain `git merge-tree` shows `en_US.lang` as one 14082-line conflict and `ClientProxy.java` as 4365 lines; with `git merge-tree --write-tree -X ignore-cr-at-eol --merge-base=9a2eb731 HEAD hbm/master` (git 2.43) they shrink to 5 hunks / 52 lines and 2 hunks / 20 lines. Merge with `git merge --no-ff -Xignore-cr-at-eol upstream_X<build>` or normalise the staging copy first. Do not mass-normalise the tree.
+4. `changelog`: resolve as ours (Space keeps a short file; earlier releases summarised upstream builds as a link line, `gerber` removed it).
+5. `gradle.properties`: set `mod_build_number=<build>`, merge both credits lists (Space rewrote the JamesH2 credit line and moved MellowArpeggiation/Pheo; upstream also edits the block); then set `RefStrings.VERSION` to `"1.0.27 BETA (<build>)"`.
+6. Keep both registration lists in `ModItems`, `ModBlocks`, `TileMappings`, `ClientProxy`, `MainRegistry`, `NEIRegistry`, `SerializableRecipe.registerAllHandlers` (upstream lines first, Space lines after, as today). `ModItems` (1035 changed lines vs upstream) and `ModBlocks` (705) conflict on adjacent lines.
+7. Port the 12 Space-added old-API fluid tiles to `IFluidStandardTransceiverMK2`/`ReceiverMK2`/`SenderMK2` (diff an upstream-ported base tile, e.g. `git diff 9a2eb731 hbm/master -- src/main/java/com/hbm/tileentity/machine/TileEntityElectrolyser.java`), replacing the `subscribeToAllAround`/`unsubscribeToAllAround`/`sendFluidToAll` shim calls with per-`DirPos` `trySubscribe`/`tryProvide`; and the block side: `2393b6de` also deletes `IFluidConnectorBlock`, so `blocks/machine/DummyOldBase.java` and `blocks/machine/rbmk/RBMKLoader.java` (the only two implementers) move to `IFluidConnectorBlockMK2`; fix the 9 Space-added `IControlReceiver` implementers; resolve the deletions/renames above.
+8. Decide the deprecation policy: strip the incoming `@Deprecated` on the reactors and `TileEntityReactorResearch`, restore the `waste_plate_*` creative tab, or accept upstream's markers.
+9. Review the dry-run hotspot list (below), then hand off for a local `./gradlew build` and in-game test; add a Space changelog line.
+
+Dry run: `git merge-tree 9a2eb731 HEAD hbm/master` reports 139 both-modified files and ~56 with conflict markers: `changelog`, `gradle.properties`, `ModBlocks`, `ModItems`, `ItemEnums`, `Mats`, `Fluids`, `HazardRegistry`, `RefStrings`, `MainRegistry`, `ClientProxy`, `ModEventHandlerClient`, `ResourceManager`, `AssemblyMachineRecipes`, `ChemicalPlantRecipes`, `LiquefactionRecipes`, `ShredderRecipes`, `FluidNetMK2`, `BlockDummyable`, `BlockDoorGeneric`, `BlockFissure`, `ContainerBase`, `IRepairable`, `HbmPotion`, `RenderBlocksCT`, `RenderDecoBlock`, `RendererObjTester`, `AshpitHandler`, `ItemSatChip`, `SatelliteBase`/`Horizons`/`Miner`/`Relay`, `XSatelliteRegistry`, ~18 tiles (Chungus, CondenserPowered, Electrolyser, FireboxBase, HeaterOilburner, MachineBlastFurnace, CombustionEngine, Diesel, Drain, Intake, PumpBase, SatDock, SatLinker, TurbineGas, FusionTorus, OilWell, Pumpjack, Barrel), `en_US.lang`, `ru_RU.lang`, `manual/satellite/satellite.json`, `models/machines/electrolyser.obj`. Treat as an estimate; a real merge with rename detection may differ.
+
+To classify any path: `git diff --name-status 9a2eb731 upstream/space-travel-twopointfive -- <path>` (Space's change) versus `git diff --name-status 9a2eb731 hbm/master -- <path>` (pending upstream change).
+
+## Merge hazards and working agreements
+
+- Keep fork changes additive and appended; never reorder registries or positional lists. Restores should mirror the exact upstream hunks (find them with `git log -S`), and never `git revert` an upstream commit wholesale: `804d2bd1` also carried a `TileEntityDoorGeneric` null-guard and a `TileEntityMachineSatLink` NBT key fix that `50db588d` correctly kept.
+- Restoring something upstream deprecated means: re-add recipes/NEI handler, strip `@Deprecated` and restore the creative tab in `ModItems`/`ModBlocks`, strip " (LEGACY)" wherever the key carries it (the reactor commit `804d2bd1` touched only `en_US`/`de_DE`, but `zh_CN` (101 `LEGACY`/`遗留` markers), `de_DE` (94), `en_US` (109), `uk_UA` (66), `it_IT`/`pl_PL` (31 each) and `ru_RU` (1) mark other deprecated content, so grep the affected key in all ten lang files instead of assuming), verify `TileMappings`/TESR/`SerializableRecipe.recipeHandlers`/textures/hazards still exist, and remind users about `config/hbmRecipes/*.json` overrides. If upstream later deletes the classes (as with `MachineTurbine`), the restore must start carrying class files, `TileMappings` entries and renderers too.
+- Do not touch `README.md` (still JameH2's, tells contributors to clone JameH2's repo), `.editorconfig`, `build.gradle` `_H261`, or CI unless deliberately releasing.
+- `HTTPHandler` version checks and the login MOTD point at JameH2's repo; a diverging version string will always be reported as outdated.
+- Deprecation state is inconsistent between fork and upstream (BAT9000 deprecated but craftable; reactors live here, deprecated there). Decide per merge.
+
+## Working agreement and cloud / local split
+
+- Roles: either the owner or a session makes code changes. A session provides a commit message draft for its own changes. The owner reviews everything and pushes `space-travel-twopointfive` themselves; sessions never push to it.
+- Local session (Claude Code on the owner's machine, JDK 8 and JDK 21 available): edit the working tree, do not commit; put the draft commit message in the hand-off. The owner builds with JDK 8, tests on client and dedicated server, commits and pushes.
+- Cloud session: the container is ephemeral, so work is committed and pushed to the session's `claude/...` branch as a staging area, and that commit message is the draft. The owner reviews the branch, merges or cherry-picks into `space-travel-twopointfive` (squash and reword as they like), and pushes.
+
+- Cloud sessions (this environment): JDK 21 only, and the network policy blocks every Forge/NTM maven host (`maven.ntmr.dev`, `maven.minecraftforge.net`, `files.minecraftforge.net`, `libraries.minecraft.net`, `modmaven.dev`, `jitpack.io`, `cursemaven.com`, `gregtech.mechaenetia.com`); only `repo1.maven.org`, `plugins.gradle.org`, `services.gradle.org`, `github.com`, `raw.githubusercontent.com` are allowed. The mod cannot be compiled here until the allowlist is widened (and JDK 8 installed; apt candidate `openjdk-8-jdk` 8u482 exists).
+- Therefore cloud sessions write code, docs and grep-level verification; the owner compiles (`./gradlew setupDecompWorkspace`, `./gradlew build`, JDK 8) and tests on client and dedicated server locally at `C:\Users\astro\Downloads\Hbm-s-Nuclear-Tech-DBS`. Every hand-off should state what was not compiled.
+- There are no automated tests. CI only runs on `space-travel-twopointfive`, so cloud branches get no CI, and GitHub Actions has never run on the fork at all (0 workflow runs as of 2026-09-24). Enabling Actions in the fork's repository settings would build a jar for every push to `space-travel-twopointfive` on Temurin JDK 8 and upload `build/libs` as an artifact; adding `claude/**` or `workflow_dispatch` to the workflow's `on:` block would extend that to staging branches.
+- Line endings: run `git ls-files --eol -- <path>` before editing; if it reports `w/crlf`, write the file back with CRLF (`unix2dos`, or an editor setting) and confirm with `git diff --numstat` that only the intended lines changed. A silently flipped file produces exactly the whole-file conflicts step 3 of the direct-merge procedure describes.
+- No ForgeGradle workspace exists in the cloud (no `eclipse/`, no `~/.gradle/caches/minecraft`), so decompiled Minecraft/Forge sources cannot be read: reason about vanilla/Forge methods from memory or from how this repo's callers use them, and flag every such assumption in the hand-off for local verification.
+
+## OC-LuaJIT relation
+
+`/home/user/OC-LuaJIT` (`github.com/mindbound/OC-LuaJIT`, modid `ocluajit`) adds a LuaJIT CPU architecture to GTNH OpenComputers 1.12.58 by subclassing OC's `NativeLuaArchitecture` (overriding `factory`, `initialize`, `save`, `load`; `LuaStateLuaJIT` redeclares natives with no behavioural overrides). It never references HBM, and HBM references only `li.cil.oc.api.*` (compileOnly `com.github.MightyPirates:OpenComputers:1.7.10-forge~1.8.9:api`). The two meet only at OC's component-call boundary, which OC-LuaJIT inherits unchanged, so HBM component code needs no changes for it. Two things to keep in mind:
+
+- OC-LuaJIT is a 5.2-class VM. The shipped floppy `assets/hbm/disks/pwrangler/usr/bin/PWRangler.lua` uses Lua 5.3 floor division `//` (lines 207, 213, 217, 252, 256) and would not load there; the disks README's "preferably Lua 5.3" advice conflicts with that target.
+- HBM emits no OC signals, so OC-LuaJIT's ocelot-brain signal-marshalling defect (roadmap line 77) cannot affect HBM. The three marshalling-sensitive HBM spots (`args.checkTable` integer keys, `checkAny == null`, mixed boxed numeric returns) behave identically under both VMs.
+
+## Future work candidates and open questions
+
+Drawn only from the surveys and the owner's own commits; not a roadmap.
+
+- Finish the "tank restoration": decide whether BAT9000 stays alongside `machine_bigasstank`; if so un-deprecate the block/TE/field and fix the lang markers in `en_US`, `zh_CN`, `en_AU`.
+- Pre-merge hygiene that can be done in the cloud now: port the 12 Space-added old-API fluid tiles to `fluidmk2`; migrate the 9 Space-added `IControlReceiver` implementers to the player-aware overload; remove HEAD references to `MachineTurbine`, `EntityMinerRocket`, `HbmCollection`, `EntitySoyuz`, `BlastFurnaceRecipe` where Space-only code uses them.
+- Decide the reactor/waste-plate deprecation policy before the next merge (`54642452`, `1abaa1e5`, `13b8efef`).
+- Normalise the 8 `modid = "opencomputers"` annotations (safe either way; confirm in-game whether `TileEntityProxyCombo` ports currently work as components) and add the missing direct `SimpleComponent` to `TileEntityWatz` and `TileEntityLaunchTable`.
+- Small verified bugs that could be fixed in the fork (each changes behaviour, so test locally): `FalloutConfigJSON.java:292` wrong key; `Identity.java:35` writes -1; `HbmLivingProps.java:496-498` wrong compound; `ChunkRadiationHandlerPRISM` `tZ = cX << 4`; `ChunkRadiationHandlerSimple.receiveChunkUnload` removes by `Chunk`; `SatelliteMiner.getCargoForItem` key type (breaks NEI `SatelliteHandler`); `TileEntityZirnoxDestroyed` `fire`/`onFire`; `TileEntityBatteryREDD` node lookup position; `ContainerMachineReactorBreeding` shift-click off-by-one; `manual/concepts/fluidhandling.json` missing `trigger`; `EntityMappings` duplicate `entity_cloud_rainbow`; `EntitySiegeTunneler` unregistered; `StructureManager.excavator` missing file.
+- Upstream oddities to leave alone unless the owner wants balance/save changes: `PowerNetMK2`/`FluidNetMK2` cumulative subtraction across priorities, `OreLayer3D` z-axis cache, `AnimationLoader` `rotmode`, `RBMKNeutronStream` dead tail check.
+- Thatmo: intentionally unbound WIP or regression? Binding needs a `Body` entry, dimension-bound `CelestialBody`, generator registration and a bedrock ore table.
+- The `_H261` suffix meaning remains unexplained. The `ClientProxy.java` line-ending state is explained: the file is LF at the base `9a2eb731` and on `hbm/master`, but every JameH2-side merge commit (`e00f2629` 07-10, `34249ff8` 07-17, `8eb10daa` 07-31, all by George Paton) stores it as CRLF while the HbmMods commits merged in between (`9ca6b3d3`, `2821c70e`) are LF; nothing has touched the file since `8eb10daa`, so that merge's CRLF persists. Expect the same flip on the next JameH2 merge; `-Xignore-cr-at-eol` absorbs it.
+- Widen `.github/workflows/build.yml` `on.push.branches` to include `claude/**` (or add `workflow_dispatch`) so cloud branches get the compile check the container cannot provide.
+- Whether the owner wants a fork-specific update endpoint instead of JameH2's `HTTPHandler` URL, and whether `en_AU.lang` and upstream `pt_BR.lang` should both be kept after the merge.
