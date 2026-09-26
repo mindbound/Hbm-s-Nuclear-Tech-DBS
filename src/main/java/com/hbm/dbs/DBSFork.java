@@ -7,8 +7,10 @@ package com.hbm.dbs;
  * the items) and before PostLoad (SerializableRecipe.initialize() reads the recipe listeners); keeping
  * it on the very next line keeps any merge conflict local and lets tools/check-fork.sh verify the order.
  *
- * Anything the fork needs that can be done after item/block init belongs here rather than inline
- * in an upstream file; tools/check-fork.sh verifies the hook and everything it depends on.
+ * Fork code that needs a hook after item/block init can be called from here (inline edits in upstream
+ * files are allowed too; see the edit policy in CLAUDE.md). This hook runs before CraftingManager,
+ * HazardRegistry, OreDictManager, TE registration and all of PostLoad (docs/extending.md, section 2).
+ * tools/check-fork.sh verifies the hook and everything it depends on.
  */
 public class DBSFork {
 

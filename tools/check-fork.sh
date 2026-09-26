@@ -5,11 +5,14 @@
 #   bash tools/check-fork.sh
 # Exit status 0 = everything present, 1 = at least one MISS line (each one names what to fix).
 #
-# The fork keeps its own code in src/main/java/com/hbm/dbs/ and touches upstream files only with
-# two single lines marked "// DBS fork hook" (MainRegistry, NEIRegistry); recipes arrive through
-# upstream's IRecipeRegisterListener addon hook. The tree is all-LF (.gitattributes enforces it). This script checks those files, the hooks, the restored
-# recipes, and every upstream class or registration the restores depend on, so that a merge which
-# silently removes something (as HbmMods did with MachineTurbine) is caught before the build.
+# The fork keeps its own code in src/main/java/com/hbm/dbs/ and changes upstream files with two lines
+# marked "// DBS fork hook" (MainRegistry, NEIRegistry), the " (LEGACY)" lang edits, the version
+# identity lines (HTTPHandler, ModEventHandler, build.gradle) and "// DBS fix B-xxx" markers on tracker
+# fixes; recipes arrive through upstream's IRecipeRegisterListener addon hook. Any file may be edited
+# (edit policy in CLAUDE.md); this script only tracks what a merge could silently undo. The tree is all-LF
+# (.gitattributes enforces it). It checks the fork files, the hooks, the restored recipes, the version
+# identity, the fix markers, and every upstream class or registration the restores depend on, so that a
+# merge which silently removes something (as HbmMods did with MachineTurbine) is caught before the build.
 
 set -u
 cd "$(dirname "$0")/.." || exit 2
@@ -54,6 +57,15 @@ need_file "$J/dbs/DBSFork.java" "DBSFork"
 need_file "$J/dbs/DBSRecipes.java" "DBSRecipes"
 need_file "$J/dbs/DBSItems.java" "DBSItems"
 need_file "$J/handler/nei/BreederRecipeHandler.java" "BreederRecipeHandler"
+need_file "$J/dbs/DBSVersion.java" "DBSVersion"
+
+echo "== fork version identity (B-008, decision D3)"
+need_egrep '^[[:space:]]*public static final String REVISION = "[^"]+";' "$J/dbs/DBSVersion.java" "DBSVersion.REVISION on one line (build.gradle and the update check parse it)"
+need_grep "DBSVersion.java\").text" build.gradle "build.gradle reads the DBS revision"
+need_grep '"_DBS"' build.gradle "build.gradle appends _DBS<revision> to the version"
+need_grep "new URL(DBSVersion.REMOTE_SOURCE)" "$J/handler/HTTPHandler.java" "update check reads the fork's DBSVersion.java"
+need_grep "DBSVersion.REVISION.equals(sub)" "$J/handler/HTTPHandler.java" "update check compares the DBS revision"
+need_grep "DBSVersion.PROJECT_URL" "$J/main/ModEventHandler.java" "login message links to the fork"
 
 echo "== hook lines in upstream files"
 need_egrep '^[[:space:]]*com\.hbm\.dbs\.DBSFork\.init\(\);' "$J/main/MainRegistry.java" "MainRegistry hook line (not commented out)"

@@ -7,7 +7,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hbm.lib.RefStrings;
+import com.hbm.dbs.DBSVersion;
 import com.hbm.main.MainRegistry;
 
 public class HTTPHandler {
@@ -23,14 +23,11 @@ public class HTTPHandler {
 
 			@Override
 			public void run() {
-				try {
-					loadVersion();
-					loadSoyuz();
-					loadTips();
-					loadSpaceTips();
-				} catch(IOException e) {
-					MainRegistry.logger.warn("Version checker failed!");
-				}
+				// DBS fix B-008: each download is independent, so a failed version check no longer skips the tips
+				try { loadVersion(); } catch(IOException e) { MainRegistry.logger.warn("Version checker failed!"); }
+				try { loadSoyuz(); } catch(IOException e) { MainRegistry.logger.warn("Soyuz hologram text download failed!"); }
+				try { loadTips(); } catch(IOException e) { MainRegistry.logger.warn("Tip of the day download failed!"); }
+				try { loadSpaceTips(); } catch(IOException e) { MainRegistry.logger.warn("Space tip download failed!"); }
 			}
 
 		};
@@ -40,7 +37,8 @@ public class HTTPHandler {
 
 	private static void loadVersion() throws IOException {
 
-		URL github = new URL("https://raw.githubusercontent.com/JameH2/Hbm-s-Nuclear-Tech-GIT/space-travel-twopointfive/src/main/java/com/hbm/lib/RefStrings.java");
+		// DBS fix B-008: compare the fork's own revision with the fork's branch, not JameH2's RefStrings.VERSION
+		URL github = new URL(DBSVersion.REMOTE_SOURCE);
 		BufferedReader in = new BufferedReader(new InputStreamReader(github.openStream()));
 
 		MainRegistry.logger.info("Searching for new versions...");
@@ -48,14 +46,14 @@ public class HTTPHandler {
 
 		while((line = in.readLine()) != null) {
 
-			if(line.contains("String VERSION")) {
+			if(line.contains("String REVISION")) {
 
 				int begin = line.indexOf('"');
 				int end = line.lastIndexOf('"');
 
 				String sub = line.substring(begin + 1, end);
 
-				newVersion = !RefStrings.VERSION.equals(sub);
+				newVersion = !DBSVersion.REVISION.equals(sub);
 				versionNumber = sub;
 				MainRegistry.logger.info("Found version " + sub);
 				break;

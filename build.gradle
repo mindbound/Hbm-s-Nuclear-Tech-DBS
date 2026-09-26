@@ -35,6 +35,10 @@ if(!mod_build_number.isEmpty()) {
 	version_name = mod_version + "_X" + mod_build_number + "_H261"
 	version = "[${version_name}]"
 }
+// DBS fix B-008: the fork's revision (com/hbm/dbs/DBSVersion.java) is appended to the jar and mcmod.info version
+def dbs_revision = (file("src/main/java/com/hbm/dbs/DBSVersion.java").text =~ /String REVISION = "([^"]+)"/)[0][1]
+version_name = version_name + "_DBS" + dbs_revision
+version = mod_build_number.isEmpty() ? version_name : "[${version_name}]"
 group = "com.hbm" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "HBM-NTM"
 compileJava.options.encoding = 'UTF-8'

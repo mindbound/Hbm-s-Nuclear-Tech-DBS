@@ -202,15 +202,15 @@ public class ModEventHandler {
 		if(!event.player.worldObj.isRemote) {
 
 			if(GeneralConfig.enableMOTD) {
-				event.player.addChatMessage(new ChatComponentText("Loaded world with JamesH2 & Mellow's NTM: Space " + RefStrings.VERSION + " for Minecraft 1.7.10!"));
+				event.player.addChatMessage(new ChatComponentText("Loaded world with JamesH2 & Mellow's NTM: Space " + RefStrings.VERSION + " (DBS r" + com.hbm.dbs.DBSVersion.REVISION + ") for Minecraft 1.7.10!")); // DBS fix B-008
 
 				if(HTTPHandler.newVersion) {
 					event.player.addChatMessage(
-							new ChatComponentText("New version " + HTTPHandler.versionNumber + " is available! Click ")
+							new ChatComponentText("New DBS revision r" + HTTPHandler.versionNumber + " is available! Click ") // DBS fix B-008
 							.setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW))
 							.appendSibling(new ChatComponentText("[here]")
 									.setChatStyle(new ChatStyle()
-										.setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/JameH2/Hbm-s-Nuclear-Tech-GIT/releases"))
+										.setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, com.hbm.dbs.DBSVersion.PROJECT_URL)) // DBS fix B-008
 										.setUnderlined(true)
 										.setColor(EnumChatFormatting.RED)
 									)
